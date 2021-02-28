@@ -6,7 +6,7 @@ import '@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol';
 import '@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol';
 
 import "./DswapToken.sol";
-import "./SyrupBar.sol";
+import "./DeggBar.sol";
 
 // import "@nomiclabs/buidler/console.sol";
 
@@ -62,7 +62,7 @@ contract MasterChef is Ownable {
     // The DSWAP TOKEN!
     DswapToken public dswap;
     // The SYRUP TOKEN!
-    SyrupBar public syrup;
+    DeggBar public degg;
     // Dev address.
     address public devaddr;
     // DSWAP tokens created per block.
@@ -97,13 +97,13 @@ contract MasterChef is Ownable {
 
     constructor(
         DswapToken _dswap,
-        SyrupBar _syrup,
+        DeggBar _degg,
         address _devaddr,
         uint256 _dswapPerBlock,
         uint256 _startBlock
     ) public {
         dswap = _dswap;
-        syrup = _syrup;
+        degg = _degg;
         devaddr = _devaddr;
         dswapPerBlock = _dswapPerBlock;
         startBlock = _startBlock;
@@ -247,7 +247,7 @@ contract MasterChef is Ownable {
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 dswapReward = multiplier.mul(dswapPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
         dswap.mint(devaddr, dswapReward.div(10));
-        dswap.mint(address(syrup), dswapReward);
+        dswap.mint(address(degg), dswapReward);
         pool.accDswapPerShare = pool.accDswapPerShare.add(dswapReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
         lastBlockUpdate = block.number;
@@ -313,7 +313,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDswapPerShare).div(1e12);
 
-        syrup.mint(msg.sender, _amount);
+        degg.mint(msg.sender, _amount);
         emit Deposit(msg.sender, 0, _amount);
     }
 
@@ -333,7 +333,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDswapPerShare).div(1e12);
 
-        syrup.burn(msg.sender, _amount);
+        degg.burn(msg.sender, _amount);
         emit Withdraw(msg.sender, 0, _amount);
     }
 
@@ -349,7 +349,7 @@ contract MasterChef is Ownable {
 
     // Safe dswap transfer function, just in case if rounding error causes pool to not have enough DSWAPs.
     function safeDswapTransfer(address _to, uint256 _amount) internal {
-        syrup.safeDswapTransfer(_to, _amount);
+        degg.safeDswapTransfer(_to, _amount);
     }
 
     // Update dev address by the previous dev.
