@@ -1185,8 +1185,8 @@ contract DcashToken is BEP20('Dragon Cash', 'DCASH') {
     }
 }
 
-// GemBarToken with Governance.
-contract GemBar is BEP20('GemBar Token', 'GEM') {
+// DeggBar with Governance.
+contract DeggBar is BEP20('DeggBar Token', 'DEGG') {
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -1503,8 +1503,8 @@ contract MasterChef is Ownable {
 
     // The DCASH TOKEN!
     DcashToken public dcash;
-    // The Gem TOKEN!
-    GemBar public gem;
+    // The Degg TOKEN!
+    DeggBar public degg;
     // Dev address.
     address public devaddr;
     // DCASH tokens created per block.
@@ -1546,7 +1546,7 @@ contract MasterChef is Ownable {
 
     constructor(
         DcashToken _dcash,
-        GemBar _gem,
+        DeggBar _degg,
         address _devaddr,
         uint256 _dcashPerBlock,
         uint256 _startBlock,
@@ -1557,7 +1557,7 @@ contract MasterChef is Ownable {
         address _teamfund
     ) public {
         dcash = _dcash;
-        gem = _gem;
+        degg = _degg;
         devaddr = _devaddr;
         dcashPerBlock = _dcashPerBlock;
         startBlock = _startBlock;
@@ -1706,7 +1706,7 @@ contract MasterChef is Ownable {
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 dcashReward = multiplier.mul(dcashPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
         dcash.mint(devaddr, dcashReward.div(10));
-        dcash.mint(address(gem), dcashReward);
+        dcash.mint(address(degg), dcashReward);
         pool.accDcashPerShare = pool.accDcashPerShare.add(dcashReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
         lastBlockUpdate = block.number;
@@ -1792,7 +1792,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
 
-        gem.mint(msg.sender, _amount);
+        degg.mint(msg.sender, _amount);
         emit Deposit(msg.sender, 0, _amount);
     }
 
@@ -1812,7 +1812,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
 
-        gem.burn(msg.sender, _amount);
+        degg.burn(msg.sender, _amount);
         emit Withdraw(msg.sender, 0, _amount);
     }
 
@@ -1828,7 +1828,7 @@ contract MasterChef is Ownable {
 
     // Safe dcash transfer function, just in case if rounding error causes pool to not have enough DCASHs.
     function safeDcashTransfer(address _to, uint256 _amount) internal {
-        gem.safeDcashTransfer(_to, _amount);
+        degg.safeDcashTransfer(_to, _amount);
     }
 
     // Update dev address by the previous dev.
