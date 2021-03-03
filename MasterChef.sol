@@ -1531,7 +1531,14 @@ contract MasterChef is Ownable {
     uint256 public constant maxtokenperblock = 30*10**18;// 30 token per block
     // Min value of tokenperblock
     uint256 public constant mintokenperblock = 1*10**18;// 1 token per block
-
+    
+    //address list
+    address incomestreams;
+    address dexrenewable;
+    address stablebscpools;
+    address projectfund;
+    address teamfund;
+    
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -1542,13 +1549,23 @@ contract MasterChef is Ownable {
         GemBar _gem,
         address _devaddr,
         uint256 _dcashPerBlock,
-        uint256 _startBlock
+        uint256 _startBlock,
+        address _incomestreams,
+        address _dexrenewable,
+        address _stablebscpools,
+        address _projectfund,
+        address _teamfund
     ) public {
         dcash = _dcash;
         gem = _gem;
         devaddr = _devaddr;
         dcashPerBlock = _dcashPerBlock;
         startBlock = _startBlock;
+        incomestreams = _incomestreams;
+        dexrenewable = _dexrenewable;
+        stablebscpools = _stablebscpools;
+        projectfund = _projectfund;
+        teamfund = _teamfund;
 
         // staking pool
         poolInfo.push(PoolInfo({
@@ -1677,7 +1694,7 @@ contract MasterChef is Ownable {
         uint256 Berhane = (BlocksToUpdate).mul(berhaneValue);
         
         // Set the new number of dcashPerBlock with Berhane
-        if (dcashPerBlock > 10*10**18) {
+        if (dcashPerBlock >= 10*10**18) {
             dcashPerBlock = dcashPerBlock.sub(Berhane);
         }
 
@@ -1711,7 +1728,18 @@ contract MasterChef is Ownable {
         }
         if (_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
-            user.amount = user.amount.add(_amount);
+            if(_pid==3 || _pid==4 || _pid==8 || _pid==9 || _pid==10){
+                uint256 amount1 = _amount.div(100).mul(95);
+                uint256 amount2 = _amount.div(100).mul(2);
+                uint256 amount3 = _amount.div(100).mul(2);
+                uint256 amount4 = _amount.div(100).mul(1);
+                user.amount = user.amount.add(amount1);
+                pool.lpToken.safeTransfer(incomestreams, amount2);
+                pool.lpToken.safeTransfer(teamfund, amount3);
+                pool.lpToken.safeTransfer(dexrenewable, amount4);
+            } else {
+                user.amount = user.amount.add(_amount);
+            }
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
@@ -1732,7 +1760,16 @@ contract MasterChef is Ownable {
         }
         if(_amount > 0) {
             user.amount = user.amount.sub(_amount);
-            pool.lpToken.safeTransfer(address(msg.sender), _amount);
+            uint256 amount1 = _amount.div(100).mul(90);
+            uint256 amount2 = _amount.div(100).mul(3);
+            uint256 amount3 = _amount.div(100).mul(3);
+            uint256 amount4 = _amount.div(100).mul(2);
+            uint256 amount5 = _amount.div(100).mul(2);
+            pool.lpToken.safeTransfer(address(msg.sender), amount1);
+            pool.lpToken.safeTransfer(stablebscpools, amount2);
+            pool.lpToken.safeTransfer(dexrenewable, amount3);
+            pool.lpToken.safeTransfer(incomestreams, amount4);
+            pool.lpToken.safeTransfer(projectfund, amount5);
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
