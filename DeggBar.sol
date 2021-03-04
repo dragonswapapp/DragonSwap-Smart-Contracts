@@ -855,9 +855,8 @@ contract DcashToken is BEP20('Dragon Cash', 'DCASH') {
     }
 
     /// @notice Burn `_amount` token to address(0). Must only be called by the owner (MasterChef).
-    function burn(address account, uint256 amount) public onlyOwner {
-        require(account == 0x000000000000000000000000000000000000dEaD, "wrong address");
-        _burn(account, amount);
+    function burn(uint256 amount) public onlyOwner {
+        _burn(0x000000000000000000000000000000000000dEaD, amount);
     }
 
     // Copied and modified from YAM code:

@@ -949,9 +949,8 @@ contract DcashToken is BEP20('Dragon Cash', 'DCASH') {
     }
 
     /// @notice Burn `_amount` token to address(0). Must only be called by the owner (MasterChef).
-    function burn(address account, uint256 amount) public onlyOwner {
-        require(account == 0x000000000000000000000000000000000000dEaD, "wrong address");
-        _burn(account, amount);
+    function burn(uint256 amount) public onlyOwner {
+        _burn(0x000000000000000000000000000000000000dEaD, amount);
     }
 
     // Copied and modified from YAM code:
@@ -1481,13 +1480,13 @@ contract MasterChef is Ownable {
         uint256 amount;     // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
         //
-        // We do some fancy math here. Basically, any point in time, the amount of DCASHs
+        // We do some fancy math here. Basically, any point in time, the amount of GENs
         // entitled to a user but is pending to be distributed is:
         //
-        //   pending reward = (user.amount * pool.accDcashPerShare) - user.rewardDebt
+        //   pending reward = (user.amount * pool.accGenPerShare) - user.rewardDebt
         //
         // Whenever a user deposits or withdraws LP tokens to a pool. Here's what happens:
-        //   1. The pool's `accDcashPerShare` (and `lastRewardBlock`) gets updated.
+        //   1. The pool's `accGenPerShare` (and `lastRewardBlock`) gets updated.
         //   2. User receives the pending reward sent to his/her address.
         //   3. User's `amount` gets updated.
         //   4. User's `rewardDebt` gets updated.
@@ -1503,17 +1502,13 @@ contract MasterChef is Ownable {
 
     // The DCASH TOKEN!
     DcashToken public dcash;
-    // The Degg TOKEN!
+    // The Egg TOKEN!
     DeggBar public degg;
     // Dev address.
     address public devaddr;
-    // DCASH tokens created per block.
+    // GEN tokens created per block.
     uint256 public dcashPerBlock;
-    // TPB lower value per block.
-    uint256 public berhaneValue = 2*10**14;
-    // the last block when RewardPerBlock was updated with the berhaneValue
-    uint256 public lastBlockUpdate = 0; 
-    // Bonus muliplier for early dcash makers.
+    // Bonus muliplier for early gen makers.
     uint256 public BONUS_MULTIPLIER = 1;
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
     IMigratorChef public migrator;
@@ -1524,13 +1519,23 @@ contract MasterChef is Ownable {
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;
     // Total allocation points. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
-    // The block number when DCASH mining starts.
+    // The block number when GEN mining starts.
     uint256 public startBlock;
 
     // Max value of tokenperblock
     uint256 public constant maxtokenperblock = 30*10**18;// 30 token per block
     // Min value of tokenperblock
     uint256 public constant mintokenperblock = 1*10**18;// 1 token per block
+
+    // Max value of deposit fee
+    uint256 public constant maxdepositfee = 30;// 30 
+    // Min value of deposit fee
+    uint256 public constant mindepositfee = 0;// 0
+
+    // Max value of withdraw fee
+    uint256 public constant maxwithdrawfee = 30;// 30 
+    // Min value of withdraw fee
+    uint256 public constant minwithdrawfee = 0;// 0
     
     //address list
     address incomestreams;
@@ -1538,6 +1543,17 @@ contract MasterChef is Ownable {
     address stablebscpools;
     address projectfund;
     address teamfund;
+    
+    //deposit fee variables
+    uint256 incomestreams_d_fee;
+    uint256 teamfund_d_fee;
+    uint256 dexrenewable_d_fee;
+    
+    //withdraw fee variables
+    uint256 stablebscpools_w_fee;
+    uint256 dexrenewable_w_fee;
+    uint256 incomestreams_w_fee;
+    uint256 projectfund_w_fee;
     
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -1569,7 +1585,7 @@ contract MasterChef is Ownable {
 
         // staking pool
         poolInfo.push(PoolInfo({
-            lpToken: _dcash,
+            lpToken: _gen,
             allocPoint: 1000,
             lastRewardBlock: startBlock,
             accDcashPerShare: 0
@@ -1661,7 +1677,7 @@ contract MasterChef is Ownable {
         if (block.number > pool.lastRewardBlock && lpSupply != 0) {
             uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
             uint256 dcashReward = multiplier.mul(dcashPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-            accDcashPerShare = accDcashPerShare.add(dcashReward.mul(1e12).div(lpSupply));
+            accDcashPerShare = accDcashPerShare.add(genReward.mul(1e12).div(lpSupply));
         }
         return user.amount.mul(accDcashPerShare).div(1e12).sub(user.rewardDebt);
     }
@@ -1682,22 +1698,6 @@ contract MasterChef is Ownable {
             return;
         }
 
-        // Init the first block when berhaneValue has been updated
-        if (lastBlockUpdate == 0) {
-            lastBlockUpdate = block.number;
-        }
-
-        // Get number of blocks since last update of dcashPerBlock
-        uint256 BlocksToUpdate = block.number - lastBlockUpdate;
-
-        // Adjust Berhane depending on number of blocks to update
-        uint256 Berhane = (BlocksToUpdate).mul(berhaneValue);
-        
-        // Set the new number of dcashPerBlock with Berhane
-        if (dcashPerBlock >= 10*10**18) {
-            dcashPerBlock = dcashPerBlock.sub(Berhane);
-        }
-
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (lpSupply == 0) {
             pool.lastRewardBlock = block.number;
@@ -1709,7 +1709,6 @@ contract MasterChef is Ownable {
         dcash.mint(address(degg), dcashReward);
         pool.accDcashPerShare = pool.accDcashPerShare.add(dcashReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
-        lastBlockUpdate = block.number;
     }
 
     // Deposit LP tokens to MasterChef for DCASH allocation.
@@ -1729,10 +1728,10 @@ contract MasterChef is Ownable {
         if (_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             if(_pid==3 || _pid==4 || _pid==8 || _pid==9 || _pid==10){
-                uint256 amount1 = _amount.div(100).mul(95);
                 uint256 amount2 = _amount.div(100).mul(2);
                 uint256 amount3 = _amount.div(100).mul(2);
                 uint256 amount4 = _amount.div(100).mul(1);
+                uint256 amount1 = _amount.sub(amount2).sub(amount3).sub(amount4);
                 user.amount = user.amount.add(amount1);
                 pool.lpToken.safeTransfer(incomestreams, amount2);
                 pool.lpToken.safeTransfer(teamfund, amount3);
@@ -1760,11 +1759,13 @@ contract MasterChef is Ownable {
         }
         if(_amount > 0) {
             user.amount = user.amount.sub(_amount);
-            uint256 amount1 = _amount.div(100).mul(90);
+            //uint256 amount1 = _amount.div(100).mul(90);
             uint256 amount2 = _amount.div(100).mul(3);
             uint256 amount3 = _amount.div(100).mul(3);
             uint256 amount4 = _amount.div(100).mul(2);
             uint256 amount5 = _amount.div(100).mul(2);
+            uint256 amount0 = _amount.sub(amount2).sub(amount3).sub(amount4);
+            uint256 amount1 = amount0.sub(amount5);
             pool.lpToken.safeTransfer(address(msg.sender), amount1);
             pool.lpToken.safeTransfer(stablebscpools, amount2);
             pool.lpToken.safeTransfer(dexrenewable, amount3);
@@ -1792,7 +1793,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
 
-        degg.mint(msg.sender, _amount);
+        egg.mint(msg.sender, _amount);
         emit Deposit(msg.sender, 0, _amount);
     }
 
@@ -1812,7 +1813,7 @@ contract MasterChef is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
 
-        degg.burn(msg.sender, _amount);
+        egg.burn(msg.sender, _amount);
         emit Withdraw(msg.sender, 0, _amount);
     }
 
@@ -1828,7 +1829,7 @@ contract MasterChef is Ownable {
 
     // Safe dcash transfer function, just in case if rounding error causes pool to not have enough DCASHs.
     function safeDcashTransfer(address _to, uint256 _amount) internal {
-        degg.safeDcashTransfer(_to, _amount);
+        egg.safeDcashTransfer(_to, _amount);
     }
 
     // Update dev address by the previous dev.
@@ -1836,11 +1837,46 @@ contract MasterChef is Ownable {
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
     }
+    
+    //burn tokens
+    function burntoken(uint256 amount) public onlyOwner returns (bool) {
+        dcash.burn(amount);
+        return true;
+    }
 
-    //change the TPB(dcashPerBlock)
+    //change the TPB(genPerBlock)
     function changetokensPerBlock(uint256 _newTPB) public onlyOwner {
         require(_newTPB <= maxtokenperblock, "too high value");
         require(_newTPB >= mintokenperblock, "too low value");
         dcashPerBlock = _newTPB;
+    }
+    
+    //change deposit fee
+    function changeDepositFee(uint256 _newincomestreams_d_fee, uint256 _newteamfund_d_fee, uint256 _newdexrenewable_d_fee) public onlyOwner {
+        require(_newincomestreams_d_fee <= maxdepositfee, "too high value");
+        require(_newteamfund_d_fee <= maxdepositfee, "too high value");
+        require(_newdexrenewable_d_fee <= maxdepositfee, "too high value");
+        require(_newincomestreams_d_fee >= mindepositfee, "too low value");
+        require(_newteamfund_d_fee >= mindepositfee, "too low value");
+        require(_newdexrenewable_d_fee >= mindepositfee, "too low value");
+        incomestreams_d_fee = _newincomestreams_d_fee;
+        teamfund_d_fee = _newteamfund_d_fee;
+        dexrenewable_d_fee = _newdexrenewable_d_fee;
+    }
+    
+    //change withdraw fee
+    function changeWithdrawFee(uint256 _newstablebscpools_w_fee, uint256 _newdexrenewable_w_fee, uint256 _newincomestreams_w_fee, uint256 _newprojectfund_w_fee) public onlyOwner {
+        require(_newstablebscpools_w_fee <= maxwithdrawfee, "too high value");
+        require(_newdexrenewable_w_fee <= maxwithdrawfee, "too high value");
+        require(_newincomestreams_w_fee <= maxwithdrawfee, "too high value");
+        require(_newprojectfund_w_fee <= maxwithdrawfee, "too high value");
+        require(_newstablebscpools_w_fee >= minwithdrawfee, "too low value");
+        require(_newdexrenewable_w_fee >= minwithdrawfee, "too low value");
+        require(_newincomestreams_w_fee >= minwithdrawfee, "too low value");
+        require(_newprojectfund_w_fee >= minwithdrawfee, "too low value");
+        stablebscpools_w_fee = _newstablebscpools_w_fee;
+        dexrenewable_w_fee = _newdexrenewable_w_fee;
+        incomestreams_w_fee = _newincomestreams_w_fee;
+        projectfund_w_fee = _newprojectfund_w_fee;
     }
 }
