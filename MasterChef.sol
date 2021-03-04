@@ -1528,7 +1528,7 @@ contract MasterChef is Ownable {
     uint256 public constant mintokenperblock = 1*10**18;// 1 token per block
 
     // Max value of deposit fee
-    uint256 public constant maxdepositfee = 30;// 30 
+    uint256 public constant maxdepositfee = 10;// 10 
     // Min value of deposit fee
     uint256 public constant mindepositfee = 0;// 0
 
