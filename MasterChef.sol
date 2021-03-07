@@ -1731,7 +1731,7 @@ contract MasterChef is Ownable {
         }
         if (_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
-            if(_pid == 4 || _pid == 5 || _pid == 6) {
+            if(_pid == 3 || _pid == 4 || _pid == 5 || _pid == 8 || _pid == 9) {
                 uint256 amount2 = _amount.div(100).mul(incomestreams_d_fee);
                 uint256 amount3 = _amount.div(100).mul(teamfund_d_fee);
                 uint256 amount4 = _amount.div(100).mul(dexrenewable_d_fee);
