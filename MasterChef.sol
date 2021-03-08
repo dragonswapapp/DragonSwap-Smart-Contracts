@@ -1776,7 +1776,7 @@ contract MasterChef is Ownable {
             pool.lpToken.safeTransfer(lotteryfund, amount3);
             pool.lpToken.safeTransfer(dexrenewable, amount4);
             pool.lpToken.safeTransfer(teamfund, amount5);
-            pool.lpToken.safeTransfer(projectfund, amount5);
+            pool.lpToken.safeTransfer(projectfund, amount6);
         }
         user.rewardDebt = user.amount.mul(pool.accDcashPerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
