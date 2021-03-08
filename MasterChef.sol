@@ -1451,18 +1451,18 @@ contract DeggBar is BEP20('DeggBar Token', 'DEGG') {
 
 // import "@nomiclabs/buidler/console.sol";
 
-interface IMigratorChef {
-    // Perform LP token migration from legacy DragonSwap to DCASH.
-    // Take the current LP token address and return the new LP token address.
-    // Migrator should have full access to the caller's LP token.
-    // Return the new LP token address.
-    //
-    // XXX Migrator must have allowance access to DragonSwap LP tokens.
-    // DSwap must mint EXACTLY the same amount of DragonSwap LP tokens or
-    // else something bad will happen. Traditional DragonSwap does not
-    // do that so be careful!
-    function migrate(IBEP20 token) external returns (IBEP20);
-}
+// interface IMigratorChef {
+//     // Perform LP token migration from legacy DragonSwap to DCASH.
+//     // Take the current LP token address and return the new LP token address.
+//     // Migrator should have full access to the caller's LP token.
+//     // Return the new LP token address.
+//     //
+//     // XXX Migrator must have allowance access to DragonSwap LP tokens.
+//     // DSwap must mint EXACTLY the same amount of DragonSwap LP tokens or
+//     // else something bad will happen. Traditional DragonSwap does not
+//     // do that so be careful!
+//     function migrate(IBEP20 token) external returns (IBEP20);
+// }
 
 // MasterChef is the master of DCASH. He can make DCASH and he is a fair guy.
 //
@@ -1511,7 +1511,7 @@ contract MasterChef is Ownable {
     // Bonus muliplier for early dcash makers.
     uint256 public BONUS_MULTIPLIER = 1;
     // The migrator contract. It has a lot of power. Can only be set through governance (owner).
-    IMigratorChef public migrator;
+    // IMigratorChef public migrator;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -1651,21 +1651,21 @@ contract MasterChef is Ownable {
     }
 
     // Set the migrator contract. Can only be called by the owner.
-    function setMigrator(IMigratorChef _migrator) public onlyOwner {
-        migrator = _migrator;
-    }
+    // function setMigrator(IMigratorChef _migrator) public onlyOwner {
+    //     migrator = _migrator;
+    // }
 
     // Migrate lp token to another lp contract. Can be called by anyone. We trust that migrator contract is good.
-    function migrate(uint256 _pid) public {
-        require(address(migrator) != address(0), "migrate: no migrator");
-        PoolInfo storage pool = poolInfo[_pid];
-        IBEP20 lpToken = pool.lpToken;
-        uint256 bal = lpToken.balanceOf(address(this));
-        lpToken.safeApprove(address(migrator), bal);
-        IBEP20 newLpToken = migrator.migrate(lpToken);
-        require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
-        pool.lpToken = newLpToken;
-    }
+    // function migrate(uint256 _pid) public {
+    //     require(address(migrator) != address(0), "migrate: no migrator");
+    //     PoolInfo storage pool = poolInfo[_pid];
+    //     IBEP20 lpToken = pool.lpToken;
+    //     uint256 bal = lpToken.balanceOf(address(this));
+    //     lpToken.safeApprove(address(migrator), bal);
+    //     IBEP20 newLpToken = migrator.migrate(lpToken);
+    //     require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
+    //     pool.lpToken = newLpToken;
+    // }
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
