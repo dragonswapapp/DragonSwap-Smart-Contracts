@@ -1528,7 +1528,7 @@ contract MasterChef is Ownable {
     uint256 public constant mintokenperblock = 1*10**18;// 1 token per block
 
     // Max value of deposit fee
-    uint256 public constant maxdepositfee = 10;// 10 
+    uint256 public constant maxdepositfee = 20;// 20 
     // Min value of deposit fee
     uint256 public constant mindepositfee = 0;// 0
 
@@ -1538,24 +1538,25 @@ contract MasterChef is Ownable {
     uint256 public constant minwithdrawfee = 0;// 0
     
     //address list
-    address incomestreams;
-    address dexrenewable;
-    address stablebscpools;
-    address projectfund;
-    address teamfund;
-    address lotteryfund;
+    address public incomestreams;
+    address public dexrenewable;
+    address public stablebscpools;
+    address public projectfund;
+    address public teamfund;
+    address public lotteryfund;
     
     //deposit fee variables
-    uint256 incomestreams_d_fee = 2;
-    uint256 teamfund_d_fee = 2;
-    uint256 dexrenewable_d_fee = 1;
+    uint256 public project_d_fee = 1;
+    uint256 public incomestreams_d_fee = 1;
+    uint256 public teamfund_d_fee = 2;
+    uint256 public dexrenewable_d_fee = 1;
     
     //withdraw fee variables
-    uint256 stablebscpools_w_fee = 2;
-    uint256 lotteryfund_w_fee = 1;
-    uint256 dexrenewable_w_fee = 3;
-    uint256 teamfund_w_fee = 2; 
-    uint256 project_w_fee = 2;
+    uint256 public stablebscpools_w_fee = 2;
+    uint256 public lotteryfund_w_fee = 1;
+    uint256 public dexrenewable_w_fee = 3;
+    uint256 public teamfund_w_fee = 2; 
+    uint256 public project_w_fee = 2;
     
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -1732,14 +1733,17 @@ contract MasterChef is Ownable {
         if (_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             if(_pid == 3 || _pid == 4 || _pid == 5 || _pid == 8 || _pid == 9) {
-                uint256 amount2 = _amount.div(100).mul(incomestreams_d_fee);
-                uint256 amount3 = _amount.div(100).mul(teamfund_d_fee);
-                uint256 amount4 = _amount.div(100).mul(dexrenewable_d_fee);
-                uint256 amount1 = _amount.sub(amount2).sub(amount3).sub(amount4);
+                uint256 amount2 = _amount.div(100).mul(project_d_fee);
+                uint256 amount3 = _amount.div(100).mul(incomestreams_d_fee);
+                uint256 amount4 = _amount.div(100).mul(teamfund_d_fee);
+                uint256 amount5 = _amount.div(100).mul(dexrenewable_d_fee);
+                uint256 amount0 = _amount.sub(amount2).sub(amount3).sub(amount4);
+                uint256 amount1 = amount0.sub(amount0).sub(amount5);
                 user.amount = user.amount.add(amount1);
-                pool.lpToken.safeTransfer(incomestreams, amount2);
-                pool.lpToken.safeTransfer(teamfund, amount3);
-                pool.lpToken.safeTransfer(dexrenewable, amount4);
+                pool.lpToken.safeTransfer(projectfund, amount2);
+                pool.lpToken.safeTransfer(incomestreams, amount3);
+                pool.lpToken.safeTransfer(teamfund, amount4);
+                pool.lpToken.safeTransfer(dexrenewable, amount5);
             } else {
                 user.amount = user.amount.add(_amount);
             }
@@ -1858,13 +1862,16 @@ contract MasterChef is Ownable {
     }
     
     //change deposit fee
-    function changeDepositFee(uint256 _newincomestreams_d_fee, uint256 _newteamfund_d_fee, uint256 _newdexrenewable_d_fee) public onlyOwner {
+    function changeDepositFee(uint256 _newproject_d_fee, uint256 _newincomestreams_d_fee, uint256 _newteamfund_d_fee, uint256 _newdexrenewable_d_fee) public onlyOwner {
+        require(_newproject_d_fee <= maxdepositfee, "too high value");
         require(_newincomestreams_d_fee <= maxdepositfee, "too high value");
         require(_newteamfund_d_fee <= maxdepositfee, "too high value");
         require(_newdexrenewable_d_fee <= maxdepositfee, "too high value");
+        require(_newproject_d_fee >= mindepositfee, "too low value");
         require(_newincomestreams_d_fee >= mindepositfee, "too low value");
         require(_newteamfund_d_fee >= mindepositfee, "too low value");
         require(_newdexrenewable_d_fee >= mindepositfee, "too low value");
+        project_d_fee = _newproject_d_fee;
         incomestreams_d_fee = _newincomestreams_d_fee;
         teamfund_d_fee = _newteamfund_d_fee;
         dexrenewable_d_fee = _newdexrenewable_d_fee;
@@ -1887,5 +1894,15 @@ contract MasterChef is Ownable {
         dexrenewable_w_fee = _newdexrenewable_w_fee;
         teamfund_w_fee = _newteamfund_w_fee;
         project_w_fee = _newproject_w_fee;
+    }
+
+    //change fund address list
+    function changeAddressList(address _newincomestreams, address _newdexrenewable, address _newstablebscpools, address _newprojectfund, address _newteamfund, address _newlotteryfund) public onlyOwner {        
+        incomestreams = _newincomestreams;
+        dexrenewable = _newdexrenewable;
+        stablebscpools = _newstablebscpools;
+        projectfund = _newprojectfund;
+        teamfund = _newteamfund;
+        lotteryfund = _newlotteryfund;
     }
 }
