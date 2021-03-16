@@ -13,9 +13,18 @@ pragma solidity 0.6.12;
                              |  $$$$$$/                                                            
                               \______/                                                             
  
- Website: https://dragoncash.app
-    
+    Dragon Network Links		
+    Website:  https://dragonnet.app	
+    Twitter:  https://twitter.com/DragonNetapp	
+    Telegram:  https://t.me/DragonNetapp	
+            
+    Dragonswap Links		
+    Website:  https://dragonswap.app/	
+    Twitter:  https://twitter.com/Dragonswap_app	
+    Telegram:  https://t.me/Dragonswap	
 /**********************************************************************/
+
+pragma solidity 0.6.12;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -863,7 +872,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 }
 
 // DcashToken with Governance.
-contract DcashToken is BEP20('Dragon Cash', 'DRGCASH') {
+contract DcashToken is BEP20('Dragon Cash', 'DCASH') {
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
